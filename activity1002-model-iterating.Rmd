@@ -14,7 +14,10 @@ In this activity, we will continue working with the data from Activity 6 (Pivoti
 
 For this activity, you will need the `{tidyverse}` and `{broom}` packages.
 
-
+```{r}
+library(tidyverse)
+library(broom)
+```
 
 
 ### The data
@@ -25,6 +28,10 @@ Note that the data we have is a slightly modified version of the original data s
 The result is a data frame where each row contains a different course and columns represent variables about the courses and professors.
 
 The data are stored in the repo's `data` folder as `evals-mod.csv`.
+
+```{r}
+df=read_csv(here::here("data", "evals-mod.csv") )
+```
 
 ### Data codebook
 
@@ -60,9 +67,9 @@ Complete the code chunk below by filling in the blanks so that you *create* a ne
 The [`rowwise`](https://dplyr.tidyverse.org/reference/rowwise.html) documentation will be helpful for seeing additional examples of using this function.  
 
 ```{r rowwise-mean}
-_____ <- _____ %>% 
+df2 <- df %>% 
   rowwise() %>% 
-  ______(bty_avg = mean(c_across(___________:___________))) %>% 
+  mutate(bty_avg = mean(c_across(bty_f1lower:bty_m2upper))) %>% 
   ungroup()
 ```
 
@@ -75,9 +82,16 @@ Visualize the distribution of `score` (only).
 Describe this distribution and comment on what this tells you about how students rate courses.
 Is this what you expected to see?
 Why, or why not?
+```{r}
+ggplot(df2, aes(score))+
+  geom_histogram()
+```
+
 Also, include any numerical summary statistics (uses a `dplyr::summarise` pipeline, not the `BASE::summary` function) that will help in making your response more effective.
 
-
+```{r}
+summary(df2$score)
+```
 
 
 **Response**:
@@ -95,7 +109,11 @@ Is this what you expected to see?
 Why, or why not?
 Also, include any numerical summary statistics (use a `dplyr::summarise` pipeline, not the `BASE::summary` function) that will help in making your response more effective.
 
-
+```{r}
+ggplot(df2, aes(x = score, y = bty_avg))+
+  geom_point(alpha = 0.2)+
+  geom_jitter()
+```
 
 
 **Response**:
@@ -107,7 +125,11 @@ Is this what you expected to see?
 Why, or why not?
 Also, include any numerical summary statistics (use a `dplyr::summarise` pipeline, not the `BASE::summary` function) that will help in making your response more effective.
 
-
+```{r}
+ggplot(df2, aes(x = bty_avg, y = score, color = gender))+
+  geom_point(alpha = 0.2)+
+  geom_jitter()
+```
 
 
 **Response**:
@@ -125,7 +147,10 @@ lm(y ~ x1 + x2, data = df)
 Fit a linear model and assign it to `mod_bty_gender` to predict the average professor evaluation `score` by average beauty rating (`avg_bty`) and the professor's `gender`.
 
 
-
+```{r}
+#note bty_avg = (`avg_bty`) 
+lm_bty_gender <- lm(score ~ bty_avg + gender, df2)
+```
 
 Compare the output from simply running `mod_bty_gender` **and** using the `broom::tidy` function on your model object.
 Based on the `tidy` output, write the fitted linear model using appropriate variable names and model estimates.
@@ -133,6 +158,10 @@ Interpret the intercept and slopes of the linear model in the context of the dat
 Be sure to comment on whether each of these values makes sense in this context.
 Also, use your `{dplyr}` skills on this `tidy` output to only include the model terms, parameter estimates, and standard errors. 
 
+```{r}
+lm_bty_gender
+tidy(lm_bty_gender)
+```
 
 
 **Response**:
@@ -142,11 +171,21 @@ Re-plot your last visualization, but now add the linear regression line(s) to th
 Be sure to turn off the shading for the uncertainty of the line.
 
 
+```{r}
+preds <- data.frame(pred = predict(lm_bty_gender, df2))
 
+ggplot(df2, aes(x = bty_avg, y = score, color = gender))+
+  geom_point(alpha = 0.2)+
+  geom_jitter()+
+  geom_abline(intercept = 3.747, slope = 0.0742)+
+  geom_abline(intercept = 3.747, slope = 0.1724)
+```
 
 Use the `broom::glance` function to view model diagnostics.
 
-
+```{r}
+glance(lm_bty_gender)
+```
 
 
 Comment on the overall fit by looking at your new visualization and these model summary statistics.
@@ -177,6 +216,7 @@ nested_data <- data %>%
   nest()
 ```
 
+
 Using the `evals` data, 
 
 - *select* only the variables `rank`, `score`, `bty_avg`, and `gender`,
@@ -186,6 +226,12 @@ Using the `evals` data,
 Make sure that you provide a meaningful object name.
 You should have a tibble with 3 rows and two columns.
 
+```{r}
+nested_data <- df2 %>%
+  select(rank, score, bty_avg, gender)%>%
+  group_by(rank)%>%
+  nest()
+```
 
 
 What are the two column names?
@@ -194,6 +240,10 @@ If so, how?
 
 **Response**:
 
+```{r}
+nested_data %>%
+  rename(sets = data)
+```
 
 Now that we have the nested dataset, we can use `map` to fit a `lm` with the same variables to each nested `data`set.
 In general, we could do this like:
@@ -214,7 +264,13 @@ In addition to fitting a `model` column to your, include the following columns w
 
 You should have a tibble that has three rows and 6 columns (`rank`, `data`, `model`, `tidied`, `glanced`, `augmented`).
 
-
+```{r}
+nd <- nested_data %>% 
+  mutate(model = map(data, ~lm(score ~ bty_avg + gender, data = .)))%>%
+  mutate(tidied = map(model, tidy))%>%
+  mutate(glanced = map(model, glance))%>%
+  mutate(augmented = map(model, augment))
+```
 
 
 ## Many models diagnostics
@@ -235,14 +291,25 @@ nested_data %>%
 Plot the estimated regression coefficients for your three models (this would be a good opportunity to use a `facet_*` layer) and provide a brief discussion comparing these values.
 
 
-
+```{r}
+nd%>%
+  unnest(tidied)%>%
+  ggplot(aes(x = rank, y = estimate))+
+  geom_point()+
+  facet_wrap(~ term)
+```
 
 **Response**:
 
 `unnest` your dataset by the `glanced` column..
 Plot the `r.squared`s for your three models and provide a brief discussion comparing these values and commenting on the models' appropriateness.
 
-
+```{r}
+nd%>%
+  unnest(glanced)%>%
+  ggplot(aes(x = rank, y = r.squared))+
+  geom_point()
+```
 
 
 **Response**:
@@ -251,7 +318,13 @@ Plot the `r.squared`s for your three models and provide a brief discussion compa
 `unnest` your dataset by the `glanced` column..
 Plot the residuals vs. fitted values provide a brief discussion commenting on the models' appropriateness.
 
-
+```{r}
+#variables in augmented not glanced
+nd%>%
+  unnest(augmented)%>%
+  ggplot(aes(x = .resid, y = .fitted))+
+  geom_point()
+```
 
 
 **Response**:

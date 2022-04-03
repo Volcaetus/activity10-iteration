@@ -90,18 +90,44 @@ User score will be the harder part of this so I have provided it for you.
 Also, I show you how to make the output of this function organized in a tibble.
 Use this TMBD page to help you determine the different attributes: `https://www.themoviedb.org/tv/93405`
 
+```{r}
+library(tidyverse)
+library(rvest)
+```
+
+
 ```{r scrape_tmdb}
 scrape_tmdb <- function(url){
   
-  page <- read_html(url)
+  page=read_html(url)
   
   # Update this part of the function to scrape the appropriate information
   
+  title=page %>%
+    html_nodes(".title a") %>%
+    html_text() %>%
+    .[1]
+  
+  year=page %>%
+    html_nodes(".release_date") %>%
+    html_text() %>%
+    gsub("[()]", "", .) %>%
+    as.numeric()
+  
+  rating=
+    page %>%
+    html_nodes("#media_v4 .content_score") %>%
+    html_element('p') %>%
+    html_text() %>%
+    as.numeric() %>% 
+    .[1]
+  
   # Scrape TMDB score
-  score <- page %>% 
+  score=page %>% 
     html_node("span.icon") %>% 
     html_attr("class") %>% 
-    str_replace(".+r(.+)", "\\1") %>% # `\\1` refers to string matched by the first capture group `(.+)`
+    #regex from stackexchange
+    str_replace(".+r(.+)", "\\1") %>%
     as.numeric()
   
   # Create a tibble containing all the scraped information
@@ -118,7 +144,9 @@ scrape_tmdb <- function(url){
 
 Use your function to obtain the information from this TV Show: `https://www.themoviedb.org/tv/2382`
 
-
+```{r}
+scrape_tmdb("https://www.themoviedb.org/tv/2382")
+```
 
 
 ## Gathering the data
@@ -129,7 +157,21 @@ Using inspect and/or SelectorGadget, explore how you might get the URLs from her
 Write the code that reads in a list/vector of most popular TV shows on TMDB, then looks in the appropriate field to find the `"href"` (hint: `html_attr`) to obtain this list of URLs.
 Call this character vector `tmdb_tv_urls` and it should have the top 20 tv shows.
 
+```{r}
+url = "https://www.themoviedb.org/tv/top-rated?page=1"
 
+page=read_html(url)
+
+tmdb_url=page %>%
+  html_nodes("#page_1 .content a") %>%
+  html_attr("href")
+
+tmdb_tv=paste0("https://www.themoviedb.org", tmdb_url)
+```
+
+```{r}
+tmdb_tv
+```
 
 
 After you have the vector of show subpage locations, you will need to *update* this vector to have each entry begin with  `"http://www.themoviedb.com"` so that you have valid URLs (hint: look into `paste`, `paste0`, or my favorite `glue::glue`)

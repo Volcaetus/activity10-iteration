@@ -151,6 +151,16 @@ summary(df2$score)
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
     ##   2.300   3.800   4.300   4.175   4.600   5.000
 
+``` r
+df2%>%
+  summarise(min = min(score), mean = mean(score), max = max(score))
+```
+
+    ## # A tibble: 1 x 3
+    ##     min  mean   max
+    ##   <dbl> <dbl> <dbl>
+    ## 1   2.3  4.17     5
+
 **Response**:
 
 A note on the `BASE::summary` function. This function along with the
@@ -174,7 +184,7 @@ ggplot(df2, aes(x = score, y = bty_avg))+
   geom_jitter()
 ```
 
-![](activity1002-model-iterating_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](activity1002-model-iterating_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
 **Response**:
 
@@ -192,7 +202,7 @@ ggplot(df2, aes(x = bty_avg, y = score, color = gender))+
   geom_jitter()
 ```
 
-![](activity1002-model-iterating_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+![](activity1002-model-iterating_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
 **Response**:
 
@@ -264,7 +274,7 @@ ggplot(df2, aes(x = bty_avg, y = score, color = gender))+
   geom_abline(intercept = 3.747, slope = 0.1724)
 ```
 
-![](activity1002-model-iterating_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+![](activity1002-model-iterating_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
 Use the `broom::glance` function to view model diagnostics.
 
@@ -402,7 +412,7 @@ nd%>%
   facet_wrap(~ term)
 ```
 
-![](activity1002-model-iterating_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+![](activity1002-model-iterating_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
 
 **Response**:
 
@@ -417,7 +427,7 @@ nd%>%
   geom_point()
 ```
 
-![](activity1002-model-iterating_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+![](activity1002-model-iterating_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
 **Response**:
 
@@ -433,7 +443,7 @@ nd%>%
   geom_point()
 ```
 
-![](activity1002-model-iterating_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+![](activity1002-model-iterating_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
 
 **Response**:
 

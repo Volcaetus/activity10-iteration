@@ -92,6 +92,10 @@ Also, include any numerical summary statistics (uses a `dplyr::summarise` pipeli
 ```{r}
 summary(df2$score)
 ```
+```{r}
+df2%>%
+  summarise(min = min(score), mean = mean(score), max = max(score))
+```
 
 
 **Response**:
